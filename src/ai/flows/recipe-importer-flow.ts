@@ -13,10 +13,13 @@ import { RecipeSchema } from '@/lib/ai-schema';
 const UrlInputSchema = z.object({
   url: z.string().url().describe('The URL of the recipe page.'),
 });
+export type UrlInput = z.infer<typeof UrlInputSchema>;
+
 
 const PhotoInputSchema = z.object({
   photoDataUri: z.string().describe("A photo of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
+export type PhotoInput = z.infer<typeof PhotoInputSchema>;
 
 // Define the output schema by picking fields from the main Recipe schema
 const ImportedRecipeOutputSchema = RecipeSchema.pick({
@@ -29,6 +32,7 @@ const ImportedRecipeOutputSchema = RecipeSchema.pick({
     ingredients: true,
     steps: true,
 }).partial(); // Make all fields optional as the AI may not find all of them
+export type ImportedRecipeOutput = z.infer<typeof ImportedRecipeOutputSchema>;
 
 // Create prompts
 const urlPrompt = ai.definePrompt({
@@ -73,10 +77,10 @@ const importFromPhotoFlow = ai.defineFlow(
 );
 
 // Exported functions to be called from the client
-export async function importRecipeFromUrl(input: z.infer<typeof UrlInputSchema>) {
+export async function importRecipeFromUrl(input: UrlInput): Promise<ImportedRecipeOutput> {
   return await importFromUrlFlow(input);
 }
 
-export async function importRecipeFromPhoto(input: z.infer<typeof PhotoInputSchema>) {
+export async function importRecipeFromPhoto(input: PhotoInput): Promise<ImportedRecipeOutput> {
   return await importFromPhotoFlow(input);
 }

@@ -9,7 +9,7 @@ import {z} from 'genkit';
 import {RecipeSchema} from '@/lib/ai-schema';
 
 // Define input schemas
-export const GenerateRecipeInputSchema = z.object({
+const GenerateRecipeInputSchema = z.object({
   userInput: z.string().describe('The user\'s request for the recipe, e.g., "a simple chicken pasta" or "a vegan chocolate cake".'),
   systemPrompt: z.string().describe('The system prompt to guide the AI model.'),
 });
@@ -18,7 +18,7 @@ export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
 // Define the output schema by picking fields from the main Recipe schema
 // We omit id, imageUrl, and imageHint as they will be generated separately/later.
-export const GeneratedRecipeOutputSchema = RecipeSchema.pick({
+const GeneratedRecipeOutputSchema = RecipeSchema.pick({
   title: true,
   description: true,
   category: true,
@@ -57,6 +57,6 @@ const generateRecipeFlow = ai.defineFlow(
 
 
 // Exported function to be called from the client
-export async function generateRecipe(input: GenerateRecipeInput) {
+export async function generateRecipe(input: GenerateRecipeInput): Promise<GeneratedRecipeOutput> {
   return await generateRecipeFlow(input);
 }

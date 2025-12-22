@@ -8,7 +8,7 @@ import { eachDayOfInterval, addDays, format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MEAL_TYPES, type MealSlot, type PlannedMeal } from '@/lib/types';
+import { MEAL_TYPES, type MealSlot, type PlannedMeal, MealType } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -24,16 +24,32 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Link from 'next/link';
-import { X, PlusCircle, ArrowLeft } from 'lucide-react';
+import { X, PlusCircle, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 
 export default function EventPlanningPage() {
   const params = useParams();
   const router = useRouter();
-  const { getEventById, getPlanForDate } = usePlanning();
+  const { getEventById, getPlanForDate, getMealsForEvent } = usePlanning();
   const eventId = params.id as string;
   const event = getEventById(eventId);
+
+  const handleGenerateShoppingList = () => {
+    const eventMeals = getMealsForEvent(eventId);
+    const recipeIds = new Set<string>();
+    eventMeals.forEach(meal => {
+        meal.recipes.forEach(recipe => {
+            recipeIds.add(recipe.recipeId);
+        });
+    });
+
+    if (recipeIds.size > 0) {
+      const ids = Array.from(recipeIds).join(',');
+      router.push(`/shopping-list?ids=${ids}`);
+    }
+  };
+
 
   if (!event) {
     return (
@@ -51,23 +67,35 @@ export default function EventPlanningPage() {
     start: startDate,
     end: addDays(startDate, event.duration - 1),
   });
+  
+  const hasPlannedMeals = getMealsForEvent(eventId).length > 0;
 
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-         <Button variant="ghost" onClick={() => router.push('/planning')} className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4"/>
-            Retour aux événements
-        </Button>
-        <h1 className="text-4xl font-bold font-headline text-primary">
-          {event.name}
-        </h1>
-        <p className="text-muted-foreground">
-          Planification du {format(startDate, 'd MMMM', { locale: fr })} au{' '}
-          {format(addDays(startDate, event.duration - 1), 'd MMMM yyyy', {
-            locale: fr,
-          })}
-        </p>
+      <div className="mb-8 space-y-4">
+         <div className="flex justify-between items-start flex-wrap gap-4">
+            <div>
+                 <Button variant="ghost" onClick={() => router.push('/planning')} className="mb-2 -ml-4">
+                    <ArrowLeft className="mr-2 h-4 w-4"/>
+                    Retour aux événements
+                </Button>
+                <h1 className="text-4xl font-bold font-headline text-primary">
+                {event.name}
+                </h1>
+                <p className="text-muted-foreground">
+                Planification du {format(startDate, 'd MMMM', { locale: fr })} au{' '}
+                {format(addDays(startDate, event.duration - 1), 'd MMMM yyyy', {
+                    locale: fr,
+                })}
+                </p>
+            </div>
+             {hasPlannedMeals && (
+                 <Button onClick={handleGenerateShoppingList} size="lg" className="shadow-lg">
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Générer la liste de courses
+                </Button>
+            )}
+         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -187,3 +215,4 @@ function AddRecipeDialog({ date, meal, eventId, children }: { date: Date; meal: 
     );
 }
 
+    

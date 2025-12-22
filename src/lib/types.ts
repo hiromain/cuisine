@@ -34,3 +34,9 @@ export type PlannedMeal = {
   meal: MealSlot;
   recipes: PlannedRecipe[];
 };
+
+export type PlannedEvent = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  name: string;
+};

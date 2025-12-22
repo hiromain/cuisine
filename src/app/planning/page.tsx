@@ -3,18 +3,19 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
 import { addDays, format, startOfWeek, eachDayOfInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePlanning } from '@/context/planning-context';
 import { useRecipes } from '@/context/recipe-context';
-import type { MealSlot, MealType, PlannedMeal } from '@/lib/types';
+import type { MealSlot, MealType, PlannedMeal, PlannedEvent } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -25,8 +26,9 @@ import {
 } from "@/components/ui/select";
 import { MEAL_TYPES } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, PlusCircle, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, PlusCircle, ChevronLeft, ChevronRight, PartyPopper, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 export default function PlanningPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -36,19 +38,11 @@ export default function PlanningPage() {
   const weekDays = eachDayOfInterval({ start, end: addDays(start, 6) });
   
   const goToPrevious = () => {
-    if (view === 'week') {
-      setCurrentDate(addDays(currentDate, -7));
-    } else {
-      setCurrentDate(addDays(currentDate, -1));
-    }
+    setCurrentDate(addDays(currentDate, view === 'week' ? -7 : -1));
   };
   
   const goToNext = () => {
-    if (view === 'week') {
-      setCurrentDate(addDays(currentDate, 7));
-    } else {
-      setCurrentDate(addDays(currentDate, 1));
-    }
+    setCurrentDate(addDays(currentDate, view === 'week' ? 7 : 1));
   };
   
   const goToToday = () => {
@@ -66,7 +60,7 @@ export default function PlanningPage() {
             <Button variant="ghost" size="icon" onClick={goToPrevious}><ChevronLeft className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon" onClick={goToNext}><ChevronRight className="h-5 w-5" /></Button>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold font-headline text-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold font-headline text-foreground capitalize">
             {view === 'week' ? format(start, 'MMMM yyyy', { locale: fr }) : format(currentDate, 'd MMMM yyyy', { locale: fr })}
           </h2>
         </div>
@@ -86,8 +80,9 @@ export default function PlanningPage() {
 }
 
 function DayColumn({ date }: { date: Date }) {
-    const { getPlanForDate } = usePlanning();
+    const { getPlanForDate, getEventsForDate } = usePlanning();
     const plans = getPlanForDate(date);
+    const events = getEventsForDate(date);
     const midiPlan = plans.find(p => p.meal === 'Midi');
     const soirPlan = plans.find(p => p.meal === 'Soir');
 
@@ -97,6 +92,7 @@ function DayColumn({ date }: { date: Date }) {
                 <CardTitle className="font-headline text-xl capitalize">
                     {format(date, 'eeee d', { locale: fr })}
                 </CardTitle>
+                <EventSection date={date} events={events} />
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
                 <MealSection date={date} meal="Midi" plan={midiPlan} />
@@ -105,6 +101,36 @@ function DayColumn({ date }: { date: Date }) {
         </Card>
     );
 }
+
+function EventSection({ date, events }: { date: Date, events: PlannedEvent[] }) {
+  const { removeEventFromPlan } = usePlanning();
+
+  return (
+    <div className="min-h-[48px] pt-2">
+      <div className="flex flex-wrap justify-center items-center gap-2">
+      {events.map(event => (
+        <Badge key={event.id} variant="secondary" className="group pl-2 pr-1 py-1 text-sm">
+          <PartyPopper className="h-4 w-4 mr-1.5" />
+          {event.name}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-5 w-5 ml-1 opacity-50 group-hover:opacity-100" 
+            onClick={() => removeEventFromPlan(event.id)}>
+              <X className="h-3 w-3" />
+          </Button>
+        </Badge>
+      ))}
+      <AddEventDialog date={date}>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <PlusCircle className="h-4 w-4" />
+        </Button>
+      </AddEventDialog>
+      </div>
+    </div>
+  );
+}
+
 
 function MealSection({ date, meal, plan }: { date: Date; meal: MealSlot; plan?: PlannedMeal }) {
   const { getRecipeById } = useRecipes();
@@ -200,3 +226,37 @@ function AddRecipeDialog({ date, meal, children }: { date: Date; meal: MealSlot,
     );
 }
 
+function AddEventDialog({ date, children }: { date: Date; children: React.ReactNode }) {
+  const { addEventToPlan } = usePlanning();
+  const [eventName, setEventName] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleAdd = () => {
+    if (eventName.trim()) {
+      addEventToPlan(date, eventName.trim());
+      setEventName("");
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Ajouter un événement</DialogTitle>
+        </DialogHeader>
+        <div className="py-4">
+          <Input 
+            placeholder="Ex: Anniversaire de Jean" 
+            value={eventName} 
+            onChange={(e) => setEventName(e.target.value)} 
+          />
+        </div>
+        <DialogFooter>
+          <Button onClick={handleAdd} disabled={!eventName.trim()}>Ajouter l'événement</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

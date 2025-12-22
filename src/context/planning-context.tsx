@@ -2,30 +2,39 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, useCallback } from 'react';
-import type { PlannedMeal, MealSlot, MealType } from '@/lib/types';
+import type { PlannedMeal, MealSlot, MealType, PlannedEvent } from '@/lib/types';
 import { format } from 'date-fns';
 
-const LOCAL_STORAGE_KEY = 'mon_planning';
+const LOCAL_STORAGE_KEY = 'mon_planning_v2';
+
+interface PlanningDataType {
+  meals: PlannedMeal[];
+  events: PlannedEvent[];
+}
 
 interface PlanningContextType {
   plannedMeals: PlannedMeal[];
+  plannedEvents: PlannedEvent[];
   addRecipeToPlan: (date: Date, meal: MealSlot, recipeId: string, mealType: MealType) => void;
   removeRecipeFromPlan: (date: Date, meal: MealSlot, recipeId: string, mealType: MealType) => void;
   getPlanForDate: (date: Date) => PlannedMeal[];
+  addEventToPlan: (date: Date, name: string) => void;
+  removeEventFromPlan: (eventId: string) => void;
+  getEventsForDate: (date: Date) => PlannedEvent[];
   isLoading: boolean;
 }
 
 const PlanningContext = createContext<PlanningContextType | undefined>(undefined);
 
 export const PlanningProvider = ({ children }: { children: ReactNode }) => {
-  const [plannedMeals, setPlannedMeals] = useState<PlannedMeal[]>([]);
+  const [planningData, setPlanningData] = useState<PlanningDataType>({ meals: [], events: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     try {
       const storedPlanning = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedPlanning) {
-        setPlannedMeals(JSON.parse(storedPlanning));
+        setPlanningData(JSON.parse(storedPlanning));
       }
     } catch (error) {
       console.error("Failed to load planning from local storage", error);
@@ -37,41 +46,40 @@ export const PlanningProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isLoading) {
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(plannedMeals));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(planningData));
       } catch (error) {
         console.error("Failed to save planning to local storage", error);
       }
     }
-  }, [plannedMeals, isLoading]);
+  }, [planningData, isLoading]);
 
   const addRecipeToPlan = useCallback((date: Date, mealSlot: MealSlot, recipeId: string, mealType: MealType) => {
     const dateString = format(date, 'yyyy-MM-dd');
     
-    setPlannedMeals(prev => {
-        const newPlannedMeals = [...prev];
-        let mealPlan = newPlannedMeals.find(p => p.date === dateString && p.meal === mealSlot);
+    setPlanningData(prev => {
+        const newMeals = [...prev.meals];
+        let mealPlan = newMeals.find(p => p.date === dateString && p.meal === mealSlot);
 
         if (mealPlan) {
-            // Check if recipe already exists for this meal type
             const recipeExists = mealPlan.recipes.some(r => r.recipeId === recipeId && r.mealType === mealType);
             if (!recipeExists) {
                 mealPlan.recipes.push({ recipeId, mealType });
             }
         } else {
-            newPlannedMeals.push({
+            newMeals.push({
                 date: dateString,
                 meal: mealSlot,
                 recipes: [{ recipeId, mealType }],
             });
         }
-        return newPlannedMeals;
+        return { ...prev, meals: newMeals };
     });
   }, []);
 
   const removeRecipeFromPlan = useCallback((date: Date, mealSlot: MealSlot, recipeId: string, mealType: MealType) => {
     const dateString = format(date, 'yyyy-MM-dd');
-    setPlannedMeals(prev => {
-        const newPlannedMeals = prev.map(plan => {
+    setPlanningData(prev => {
+        const newMeals = prev.meals.map(plan => {
             if (plan.date === dateString && plan.meal === mealSlot) {
                 return {
                     ...plan,
@@ -79,25 +87,47 @@ export const PlanningProvider = ({ children }: { children: ReactNode }) => {
                 };
             }
             return plan;
-        }).filter(plan => plan.recipes.length > 0); // Remove meal if it becomes empty
-        return newPlannedMeals;
+        }).filter(plan => plan.recipes.length > 0);
+        return { ...prev, meals: newMeals };
     });
   }, []);
 
-
   const getPlanForDate = useCallback((date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
-    return plannedMeals.filter(p => p.date === dateString);
-  }, [plannedMeals]);
+    return planningData.meals.filter(p => p.date === dateString);
+  }, [planningData.meals]);
+
+  const addEventToPlan = useCallback((date: Date, name: string) => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    const newEvent: PlannedEvent = {
+      id: `event-${Date.now()}`,
+      date: dateString,
+      name,
+    };
+    setPlanningData(prev => ({ ...prev, events: [...prev.events, newEvent] }));
+  }, []);
+
+  const removeEventFromPlan = useCallback((eventId: string) => {
+    setPlanningData(prev => ({ ...prev, events: prev.events.filter(e => e.id !== eventId)}));
+  }, []);
+
+  const getEventsForDate = useCallback((date: Date) => {
+    const dateString = format(date, 'yyyy-MM-dd');
+    return planningData.events.filter(e => e.date === dateString);
+  }, [planningData.events]);
 
 
   const value = useMemo(() => ({
-    plannedMeals,
+    plannedMeals: planningData.meals,
+    plannedEvents: planningData.events,
     addRecipeToPlan,
     removeRecipeFromPlan,
     getPlanForDate,
+    addEventToPlan,
+    removeEventFromPlan,
+    getEventsForDate,
     isLoading
-  }), [plannedMeals, addRecipeToPlan, removeRecipeFromPlan, getPlanForDate, isLoading]);
+  }), [planningData, addRecipeToPlan, removeRecipeFromPlan, getPlanForDate, addEventToPlan, removeEventFromPlan, getEventsForDate, isLoading]);
 
   if (isLoading) {
     return (
@@ -121,4 +151,3 @@ export const usePlanning = () => {
   }
   return context;
 };
-

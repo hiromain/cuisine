@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
 import { RecipeProvider } from '@/context/recipe-context';
 import { PlanningProvider } from '@/context/planning-context';
+import { SettingsProvider } from '@/context/settings-context';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -23,15 +24,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        <RecipeProvider>
-          <PlanningProvider>
-            <div className="relative flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-            </div>
-            <Toaster />
-          </PlanningProvider>
-        </RecipeProvider>
+        <SettingsProvider>
+          <RecipeProvider>
+            <PlanningProvider>
+              <div className="relative flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+              </div>
+              <Toaster />
+            </PlanningProvider>
+          </RecipeProvider>
+        </SettingsProvider>
       </body>
     </html>
   );

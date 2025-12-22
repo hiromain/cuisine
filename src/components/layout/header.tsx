@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { ChefHat, PlusCircle, CalendarDays, Sparkles, Settings } from 'lucide-react';
+import { ChefHat, PlusCircle, CalendarDays, Sparkles, Settings, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Header() {
@@ -20,6 +20,12 @@ export function Header() {
               <Link href="/planning">
                 <CalendarDays className="mr-2 h-4 w-4" />
                 Planning
+              </Link>
+            </Button>
+             <Button asChild variant="ghost">
+              <Link href="/stats">
+                <BarChart className="mr-2 h-4 w-4" />
+                Statistiques
               </Link>
             </Button>
             <Button asChild variant="ghost">

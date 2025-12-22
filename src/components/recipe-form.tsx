@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useRecipes } from '@/context/recipe-context';
 import type { Recipe } from '@/lib/types';
+import { useEffect } from 'react';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +52,7 @@ const recipeSchema = z.object({
 type RecipeFormValues = z.infer<typeof recipeSchema>;
 
 interface RecipeFormProps {
-  initialData?: Recipe;
+  initialData?: Recipe | Partial<Recipe>;
 }
 
 export function RecipeForm({ initialData }: RecipeFormProps) {
@@ -59,13 +60,21 @@ export function RecipeForm({ initialData }: RecipeFormProps) {
   const { addRecipe, updateRecipe } = useRecipes();
   const { toast } = useToast();
 
-  const isEditMode = !!initialData;
+  const isEditMode = !!initialData?.id;
 
-  const defaultValues = isEditMode
+  const defaultValues = initialData && Object.keys(initialData).length > 0
     ? {
       ...initialData,
-      steps: initialData.steps,
-      ingredients: initialData.ingredients,
+      title: initialData.title || '',
+      description: initialData.description || '',
+      category: initialData.category || 'Plat Principal',
+      prepTime: initialData.prepTime || 0,
+      cookTime: initialData.cookTime || 0,
+      servings: initialData.servings || 1,
+      ingredients: initialData.ingredients && initialData.ingredients.length > 0 ? initialData.ingredients.map(i => ({...i, id: i.id || `new-${Math.random()}`})) : [{ id: 'new-0', name: '', quantity: '' }],
+      steps: initialData.steps && initialData.steps.length > 0 ? initialData.steps : [''],
+      imageUrl: initialData.imageUrl || 'https://picsum.photos/seed/9/600/400',
+      imageHint: initialData.imageHint || 'food plate',
     }
     : {
       title: '',
@@ -85,6 +94,13 @@ export function RecipeForm({ initialData }: RecipeFormProps) {
     defaultValues,
     mode: "onChange",
   });
+  
+  useEffect(() => {
+    if (initialData) {
+      form.reset(defaultValues);
+    }
+  }, [initialData, form]);
+
 
   const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
     control: form.control,
@@ -97,8 +113,8 @@ export function RecipeForm({ initialData }: RecipeFormProps) {
   });
   
   function onSubmit(data: RecipeFormValues) {
-    if (isEditMode && initialData) {
-      updateRecipe({ ...initialData, ...data });
+    if (isEditMode && initialData.id) {
+      updateRecipe({ ...data, id: initialData.id });
       toast({ title: "Recette modifiée!", description: "La recette a été mise à jour avec succès." });
       router.push(`/recipes/${initialData.id}`);
     } else {
@@ -193,7 +209,7 @@ export function RecipeForm({ initialData }: RecipeFormProps) {
 
           <div className="flex justify-end gap-2">
              <Button type="button" variant="outline" onClick={() => router.back()}>Annuler</Button>
-             <Button type="submit" disabled={!form.formState.isValid || form.formState.isSubmitting}>
+             <Button type="submit" disabled={form.formState.isSubmitting}>
                {isEditMode ? 'Mettre à jour la recette' : 'Enregistrer la recette'}
              </Button>
           </div>

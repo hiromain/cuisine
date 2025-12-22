@@ -16,7 +16,7 @@ import type { Recipe } from '@/lib/types';
 
 export default function GeneratorPage() {
   const router = useRouter();
-  const { addRecipe } = useRecipes();
+  const { setGeneratedRecipe } = useRecipes();
   const { systemPrompt } = useSettings();
   const [request, setRequest] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,10 +35,10 @@ export default function GeneratorPage() {
     try {
       const result = await generateRecipe({ userInput: request, systemPrompt });
 
-      // Create a full recipe object, filling in missing fields
-      const newRecipeData: Omit<Recipe, 'id'> = {
-        title: result.title || 'Recette sans titre',
-        description: result.description || 'Aucune description fournie.',
+      // Create a partial recipe object for the form
+      const generatedData: Partial<Recipe> = {
+        title: result.title || '',
+        description: result.description || '',
         category: result.category || 'Plat Principal',
         prepTime: result.prepTime || 0,
         cookTime: result.cookTime || 0,
@@ -49,14 +49,15 @@ export default function GeneratorPage() {
         imageHint: result.title ? result.title.toLowerCase().split(' ').slice(0,2).join(' ') : 'food plate',
       };
       
-      addRecipe(newRecipeData);
+      // Store the generated recipe in context to be picked up by the new recipe page
+      setGeneratedRecipe(generatedData);
       
       toast({
         title: 'Recette générée !',
-        description: `La recette "${newRecipeData.title}" a été ajoutée à votre livre.`,
+        description: 'Vérifiez et modifiez les informations ci-dessous avant d\'enregistrer.',
       });
 
-      router.push('/'); // Navigate to home to see the new recipe
+      router.push('/recipes/new'); // Navigate to the form page
     } catch (error) {
       console.error(error);
       toast({

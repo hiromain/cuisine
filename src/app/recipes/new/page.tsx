@@ -1,36 +1,36 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRecipes } from '@/context/recipe-context';
 import { RecipeForm } from '@/components/recipe-form';
 import { RecipeImporter } from '@/components/recipe-importer';
 import type { Recipe } from '@/lib/types';
 
 export default function NewRecipePage() {
-  const [importedRecipe, setImportedRecipe] = useState<Partial<Recipe> | undefined>();
+  const { generatedRecipe, setGeneratedRecipe } = useRecipes();
+  const [initialRecipeData, setInitialRecipeData] = useState<Partial<Recipe> | undefined>();
+
+  useEffect(() => {
+    if (generatedRecipe) {
+      setInitialRecipeData(generatedRecipe);
+      // Clear the generated recipe from context so it's not reused on next visit
+      setGeneratedRecipe(null);
+    }
+  }, [generatedRecipe, setGeneratedRecipe]);
 
   const handleRecipeImported = (recipeData: Partial<Recipe>) => {
-    // Merge with some defaults to ensure the form is valid
-    setImportedRecipe({
-      ...{
-        title: '',
-        description: '',
-        category: 'Plat Principal',
-        prepTime: 0,
-        cookTime: 0,
-        servings: 1,
-        ingredients: [],
-        steps: [],
-        imageUrl: 'https://picsum.photos/seed/10/600/400',
-        imageHint: 'food plate',
-      },
-      ...recipeData,
-    });
+    setInitialRecipeData(recipeData);
   };
+
+  const formKey = useMemo(() => JSON.stringify(initialRecipeData), [initialRecipeData]);
 
   return (
     <div className="container mx-auto max-w-4xl py-12 px-4 space-y-8">
-      <RecipeImporter onRecipeImported={handleRecipeImported} />
-      <RecipeForm initialData={importedRecipe as Recipe} key={JSON.stringify(importedRecipe)} />
+      {!initialRecipeData && (
+        <RecipeImporter onRecipeImported={handleRecipeImported} />
+      )}
+      <RecipeForm initialData={initialRecipeData as Recipe} key={formKey} />
     </div>
   );
 }

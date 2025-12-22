@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
@@ -13,6 +14,8 @@ interface RecipeContextType {
   updateRecipe: (recipe: Recipe) => void;
   deleteRecipe: (id: string) => void;
   isLoading: boolean;
+  generatedRecipe: Partial<Recipe> | null;
+  setGeneratedRecipe: (recipe: Partial<Recipe> | null) => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -20,6 +23,7 @@ const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 export const RecipeProvider = ({ children }: { children: ReactNode }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [generatedRecipe, setGeneratedRecipe] = useState<Partial<Recipe> | null>(null);
 
   useEffect(() => {
     try {
@@ -76,8 +80,10 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
     addRecipe,
     updateRecipe,
     deleteRecipe,
-    isLoading
-  }), [recipes, isLoading]);
+    isLoading,
+    generatedRecipe,
+    setGeneratedRecipe,
+  }), [recipes, isLoading, generatedRecipe]);
 
   if (isLoading) {
     return (

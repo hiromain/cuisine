@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRecipes } from '@/context/recipe-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Users, Soup, Trash2, Pencil } from 'lucide-react';
+import { Clock, Users, Soup, Trash2, Pencil, Heart, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import {
   AlertDialog,
@@ -27,8 +27,11 @@ export default function RecipeDetailPage() {
 
   if (!recipe) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-xl text-muted-foreground">Recette non trouvée.</p>
+      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+        <p className="text-2xl font-serif text-muted-foreground">Oups, cette recette a disparu dans le triangle des Bermudes...</p>
+        <Button onClick={() => router.push('/')} variant="ghost">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retour au bercail
+        </Button>
       </div>
     );
   }
@@ -39,41 +42,45 @@ export default function RecipeDetailPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-4xl py-12 px-4">
-      <article className="bg-card p-6 sm:p-8 rounded-2xl shadow-lg animate-in fade-in-50 duration-500">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <Badge variant="secondary">{recipe.category}</Badge>
-            <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-primary">
+    <div className="container mx-auto max-w-4xl py-8 px-4">
+       <Button onClick={() => router.push('/')} variant="ghost" className="mb-6 hover:bg-primary/10 hover:text-primary transition-colors">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retour aux recettes
+        </Button>
+
+      <article className="bg-card p-6 sm:p-10 rounded-3xl shadow-xl animate-in fade-in-50 duration-500 overflow-hidden border border-white/20">
+        <div className="flex justify-between items-start mb-6">
+          <div className="space-y-3">
+            <Badge className="bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">{recipe.category}</Badge>
+            <h1 className="font-serif text-4xl sm:text-6xl font-bold text-foreground leading-tight">
               {recipe.title}
             </h1>
-            <p className="mt-4 text-lg text-muted-foreground">{recipe.description}</p>
+            <p className="text-xl text-muted-foreground italic">"{recipe.description}"</p>
           </div>
-          <div className="flex gap-2 flex-shrink-0">
-            <Button asChild variant="outline" size="icon">
+          <div className="flex gap-3 flex-shrink-0">
+            <Button asChild variant="secondary" size="icon" className="rounded-full h-12 w-12 shadow-sm">
               <Link href={`/recipes/${recipe.id}/edit`}>
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-5 w-5" />
                 <span className="sr-only">Modifier</span>
               </Link>
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="icon">
-                  <Trash2 className="h-4 w-4" />
+                <Button variant="destructive" size="icon" className="rounded-full h-12 w-12 shadow-sm">
+                  <Trash2 className="h-5 w-5" />
                    <span className="sr-only">Supprimer</span>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="rounded-2xl">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action est irréversible. La recette sera définitivement supprimée.
+                  <AlertDialogTitle className="text-2xl font-serif">Tu veux vraiment effacer ce trésor ?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-lg">
+                    Attention, une fois supprimée, cette recette rejoindra le paradis des cookies oubliés. C'est irréversible !
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Supprimer
+                <AlertDialogFooter className="gap-2">
+                  <AlertDialogCancel className="rounded-full px-6">Non, je la garde !</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full px-8 font-bold">
+                    Oui, au revoir !
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -81,57 +88,76 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        <div className="relative my-8 h-64 sm:h-96 w-full overflow-hidden rounded-lg">
+        <div className="relative my-8 h-80 sm:h-[450px] w-full overflow-hidden rounded-3xl shadow-inner group">
           <Image
             src={recipe.imageUrl}
             alt={recipe.title}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
             data-ai-hint={recipe.imageHint}
+            priority
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        <div className="my-8 grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
-          <div className="bg-background/50 p-4 rounded-lg">
-            <Clock className="mx-auto h-8 w-8 text-primary" />
-            <p className="mt-2 font-semibold">Préparation</p>
-            <p className="text-muted-foreground">{recipe.prepTime} min</p>
+        <div className="my-10 grid grid-cols-2 sm:grid-cols-3 gap-6">
+          <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center border border-border/50">
+            <Clock className="h-8 w-8 text-primary mb-3" />
+            <p className="font-bold text-lg">Prépa'</p>
+            <p className="text-muted-foreground font-medium">{recipe.prepTime} min</p>
           </div>
-          <div className="bg-background/50 p-4 rounded-lg">
-            <Soup className="mx-auto h-8 w-8 text-primary" />
-            <p className="mt-2 font-semibold">Cuisson</p>
-            <p className="text-muted-foreground">{recipe.cookTime} min</p>
+          <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center border border-border/50">
+            <Soup className="h-8 w-8 text-primary mb-3" />
+            <p className="font-bold text-lg">Cuisson</p>
+            <p className="text-muted-foreground font-medium">{recipe.cookTime} min</p>
           </div>
-          <div className="bg-background/50 p-4 rounded-lg col-span-2 sm:col-span-1">
-            <Users className="mx-auto h-8 w-8 text-primary" />
-            <p className="mt-2 font-semibold">Portions</p>
-            <p className="text-muted-foreground">{recipe.servings} personnes</p>
+          <div className="bg-background/80 backdrop-blur-sm p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center border border-border/50 col-span-2 sm:col-span-1">
+            <Users className="h-8 w-8 text-primary mb-3" />
+            <p className="font-bold text-lg">Pour</p>
+            <p className="text-muted-foreground font-medium">{recipe.servings} gourmands</p>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-x-8 gap-y-12">
+        <div className="grid md:grid-cols-3 gap-x-12 gap-y-12">
           <div className="md:col-span-1">
-            <h2 className="font-serif text-2xl font-bold mb-4 border-b-2 border-primary pb-2">Ingrédients</h2>
-            <ul className="space-y-3">
+            <h2 className="font-serif text-3xl font-bold mb-6 flex items-center">
+              <span className="bg-primary/10 text-primary p-2 rounded-lg mr-3">🥫</span>
+              Ingrédients
+            </h2>
+            <ul className="space-y-4">
               {recipe.ingredients.map((ingredient, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="text-primary font-bold mr-3 mt-1">&#8226;</span>
-                  <span><strong>{ingredient.quantity}</strong> {ingredient.name}</span>
+                <li key={index} className="flex items-start group">
+                  <span className="text-primary font-bold mr-4 mt-1 transition-transform group-hover:scale-125">✦</span>
+                  <span className="text-lg">
+                    <strong className="text-foreground">{ingredient.quantity}</strong> 
+                    <span className="text-muted-foreground ml-1">{ingredient.name}</span>
+                  </span>
                 </li>
               ))}
             </ul>
           </div>
           <div className="md:col-span-2">
-            <h2 className="font-serif text-2xl font-bold mb-4 border-b-2 border-primary pb-2">Préparation</h2>
-            <ol className="space-y-6">
+            <h2 className="font-serif text-3xl font-bold mb-6 flex items-center">
+              <span className="bg-primary/10 text-primary p-2 rounded-lg mr-3">👨‍🍳</span>
+              La recette pas à pas
+            </h2>
+            <ol className="space-y-8">
               {recipe.steps.map((step, index) => (
-                <li key={index} className="flex items-start">
-                  <span className="flex items-center justify-center h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold mr-4 flex-shrink-0">{index + 1}</span>
-                  <p className="pt-1">{step}</p>
+                <li key={index} className="flex items-start group">
+                  <span className="flex items-center justify-center h-10 w-10 rounded-full bg-primary text-primary-foreground font-black mr-5 flex-shrink-0 shadow-md group-hover:scale-110 transition-transform">
+                    {index + 1}
+                  </span>
+                  <p className="text-lg leading-relaxed pt-1 text-foreground/90">{step}</p>
                 </li>
               ))}
             </ol>
           </div>
+        </div>
+        
+        <div className="mt-16 pt-8 border-t border-dashed text-center">
+           <p className="text-muted-foreground flex items-center justify-center text-lg italic">
+             Cuisiné avec <Heart className="h-5 w-5 mx-2 text-primary fill-primary animate-pulse" /> par toi !
+           </p>
         </div>
       </article>
     </div>

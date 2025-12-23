@@ -9,7 +9,7 @@ import { usePlanning } from '@/context/planning-context';
 import type { PlannedEvent } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, CalendarDays, PartyPopper, Trash2, Pencil, Sparkles, Loader2 } from 'lucide-react';
+import { PlusCircle, CalendarDays, PartyPopper, Trash2, Pencil, Sparkles, Loader2, Utensils } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function PlanningPage() {
   return (
-    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="container mx-auto py-8">
        <EventsView />
     </div>
   );
@@ -46,67 +46,70 @@ function EventsView() {
       return (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-xl font-serif text-muted-foreground">Chargement de votre planning...</p>
+          <p className="text-xl font-serif text-muted-foreground italic">Je prépare ton calendrier aux petits oignons...</p>
         </div>
       );
     }
     
     return (
-        <div className="space-y-8">
+        <div className="space-y-12">
             <div className="text-center">
-                <h1 className="text-4xl font-bold font-serif tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                    Vos Événements
+                <h1 className="text-4xl font-bold font-serif tracking-tight text-foreground sm:text-6xl">
+                    Tes <span className="text-primary">Festins</span> Planifiés
                 </h1>
-                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-                  Planifiez vos repas pour des occasions spéciales.
+                <p className="mt-4 max-w-2xl mx-auto text-xl text-muted-foreground leading-relaxed">
+                  Prépare tes repas pour les jours à venir ou pour tes grandes occasions.
                 </p>
             </div>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
                 <AddEventDialog onEventCreated={handleCreateEvent}>
-                    <Button size="lg" variant="outline">
-                        <PlusCircle className="mr-2 h-5 w-5" />
-                        Créer un événement manuel
+                    <Button size="lg" variant="outline" className="rounded-full px-8 border-primary/20 hover:bg-primary/5 transition-all">
+                        <PlusCircle className="mr-2 h-5 w-5 text-primary" />
+                        Nouvel événement
                     </Button>
                 </AddEventDialog>
                  <GeneratePlanningDialog recipes={recipes} addEvent={addEvent} addRecipeToPlan={addRecipeToPlan} toast={toast} />
             </div>
 
             {plannedEvents.length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {plannedEvents.map(event => (
-                        <Card key={event.id} className="flex flex-col">
-                            <CardHeader>
-                                <CardTitle className="font-serif flex justify-between items-start">
+                        <Card key={event.id} className="flex flex-col border-none shadow-lg rounded-2xl overflow-hidden hover:shadow-xl transition-shadow group">
+                            <CardHeader className="bg-primary/5 pb-6">
+                                <CardTitle className="font-serif text-2xl flex justify-between items-start text-foreground group-hover:text-primary transition-colors">
                                     {event.name}
                                     <div className="flex gap-1">
                                         <AddEventDialog existingEvent={event}>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white">
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
                                         </AddEventDialog>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeEvent(event.id)}>
+                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white text-destructive hover:text-destructive" onClick={() => removeEvent(event.id)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </CardTitle>
-                                <CardDescription>
-                                    {event.duration} jour{event.duration > 1 ? 's' : ''} à partir du {format(parseISO(event.startDate), 'd MMMM yyyy', { locale: fr })}
+                                <CardDescription className="font-medium">
+                                    {event.duration} jour{event.duration > 1 ? 's' : ''} • Dès le {format(parseISO(event.startDate), 'd MMMM yyyy', { locale: fr })}
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="flex-1 flex flex-col justify-end">
-                                <Button asChild className="w-full">
-                                    <Link href={`/planning/events/${event.id}`}>Planifier les repas</Link>
+                            <CardContent className="flex-1 flex flex-col justify-end p-6 pt-0 mt-6">
+                                <Button asChild className="w-full rounded-xl h-12 font-bold shadow-md">
+                                    <Link href={`/planning/events/${event.id}`}>
+                                        <Utensils className="mr-2 h-4 w-4" />
+                                        C'est parti !
+                                    </Link>
                                 </Button>
                             </CardContent>
                         </Card>
                     ))}
                  </div>
             ) : (
-                <div className="text-center py-16 border-dashed border-2 rounded-lg">
-                    <PartyPopper className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-medium">Aucun événement planifié</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">Créez votre premier événement pour commencer.</p>
+                <div className="text-center py-20 bg-card/50 rounded-3xl border border-dashed border-muted-foreground/30">
+                    <PartyPopper className="mx-auto h-16 w-16 text-muted-foreground/40 mb-4" />
+                    <h3 className="text-2xl font-bold mb-2">Rien de prévu pour l'instant</h3>
+                    <p className="text-muted-foreground max-w-sm mx-auto">Lance-toi et crée ton premier événement pour ne plus jamais manquer d'inspiration !</p>
                 </div>
             )}
         </div>
@@ -129,7 +132,6 @@ function AddEventDialog({ children, onEventCreated, existingEvent }: { children:
           onEventCreated?.(newEvent);
       }
       setIsOpen(false);
-      // Reset form for next time if it was a new event
       if(!existingEvent) {
           setName("");
           setStartDate(new Date());
@@ -141,36 +143,38 @@ function AddEventDialog({ children, onEventCreated, existingEvent }: { children:
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] rounded-2xl">
         <DialogHeader>
-          <DialogTitle>{existingEvent ? "Modifier l'événement" : "Créer un événement"}</DialogTitle>
+          <DialogTitle className="font-serif text-2xl">{existingEvent ? "On change les plans ?" : "Nouvelle aventure culinaire"}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Nom</Label>
-                <Input id="name" value={name} onChange={e => setName(e.target.value)} className="col-span-3" placeholder="Ex: Week-end à la mer"/>
+        <div className="grid gap-6 py-6">
+            <div className="space-y-2">
+                <Label htmlFor="name" className="font-bold">Nom de l'événement</Label>
+                <Input id="name" value={name} onChange={e => setName(e.target.value)} className="rounded-xl bg-background/50 border-none h-11" placeholder="Ex: Grand banquet de Noël"/>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">Début</Label>
+            <div className="space-y-2 flex flex-col">
+                <Label className="font-bold mb-1">On commence quand ?</Label>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" className="col-span-3 font-normal justify-start">
-                           <CalendarDays className="mr-2 h-4 w-4"/>
+                        <Button variant="outline" className="font-normal justify-start rounded-xl h-11 bg-background/50 border-none">
+                           <CalendarDays className="mr-2 h-4 w-4 text-primary"/>
                            {startDate ? format(startDate, 'd MMMM yyyy', { locale: fr}) : "Choisir une date"}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl border-none">
                         <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
                     </PopoverContent>
                 </Popover>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="duration" className="text-right">Durée (jours)</Label>
-                <Input id="duration" type="number" value={duration} onChange={e => setDuration(Math.max(1, parseInt(e.target.value, 10) || 1))} className="col-span-3"/>
+            <div className="space-y-2">
+                <Label htmlFor="duration" className="font-bold">Ça va durer combien de jours ?</Label>
+                <Input id="duration" type="number" value={duration} onChange={e => setDuration(Math.max(1, parseInt(e.target.value, 10) || 1))} className="rounded-xl bg-background/50 border-none h-11"/>
             </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSave} disabled={!name.trim() || !startDate || duration <= 0}>{existingEvent ? "Enregistrer" : "Créer et planifier"}</Button>
+          <Button onClick={handleSave} className="w-full rounded-xl h-12 font-bold shadow-lg" disabled={!name.trim() || !startDate || duration <= 0}>
+              {existingEvent ? "Enregistrer les modifs" : "On y va !"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -189,8 +193,8 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
     if (duration <= 0 || !constraints.trim()) {
       toast({
         variant: 'destructive',
-        title: 'Informations manquantes',
-        description: 'Veuillez renseigner une durée et des instructions.',
+        title: 'Heu...',
+        description: 'Dis-moi au moins combien de jours et ce que tu as en tête !',
       });
       return;
     }
@@ -214,8 +218,8 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
       });
 
       toast({
-        title: 'Planning généré !',
-        description: `L'événement "${result.eventName}" a été créé.`,
+        title: 'Tadam ! ✨',
+        description: `Ton événement "${result.eventName}" est prêt.`,
       });
       setIsOpen(false);
       setConstraints('');
@@ -225,8 +229,8 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
       console.error(error);
       toast({
         variant: 'destructive',
-        title: 'Erreur de génération',
-        description: error.message || 'Un problème est survenu lors de la génération du planning.',
+        title: 'Oups, petit bug technique',
+        description: error.message || 'L\'IA a eu un petit coup de mou.',
       });
     } finally {
       setIsLoading(false);
@@ -236,34 +240,38 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button size="lg">
+        <Button size="lg" className="rounded-full px-8 shadow-xl hover:scale-105 transition-transform">
           <Sparkles className="mr-2 h-5 w-5" />
-          Générer un planning IA
+          Magie de l'IA
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Générer un planning avec l'IA</DialogTitle>
+          <DialogTitle className="font-serif text-2xl flex items-center gap-2">
+              <Sparkles className="text-primary h-6 w-6" />
+              L'IA s'occupe de tout
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="duration-ai">Durée (en jours)</Label>
-            <Input id="duration-ai" type="number" min="1" max="14" value={duration} onChange={(e) => setDuration(parseInt(e.target.value, 10) || 1)} />
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="duration-ai" className="font-bold">Durée (jours)</Label>
+            <Input id="duration-ai" type="number" min="1" max="14" value={duration} onChange={(e) => setDuration(parseInt(e.target.value, 10) || 1)} className="rounded-xl bg-background/50 border-none h-11"/>
           </div>
-          <div>
-            <Label htmlFor="constraints-ai">Instructions</Label>
+          <div className="space-y-2">
+            <Label htmlFor="constraints-ai" className="font-bold">Tes envies du moment</Label>
             <Textarea
               id="constraints-ai"
-              placeholder="Ex: Repas végétariens, rapides pour le soir, avec du poisson le vendredi..."
+              placeholder="Dis-moi tout : végétarien, rapide, sans choux de Bruxelles, ambiance italie..."
               value={constraints}
               onChange={(e) => setConstraints(e.target.value)}
               rows={4}
+              className="rounded-xl bg-background/50 border-none"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleGenerate} disabled={isLoading}>
-            {isLoading ? <Loader2 className="animate-spin" /> : 'Générer le planning'}
+          <Button onClick={handleGenerate} disabled={isLoading} className="w-full rounded-xl h-12 font-bold shadow-lg">
+            {isLoading ? <><Loader2 className="animate-spin mr-2" /> Je réfléchis...</> : 'Générer la magie ✨'}
           </Button>
         </DialogFooter>
       </DialogContent>

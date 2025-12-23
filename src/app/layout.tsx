@@ -22,8 +22,8 @@ const alegreya = Alegreya({
 });
 
 export const metadata: Metadata = {
-  title: 'A table ! - Votre livre de recettes',
-  description: 'Gérez et découvrez de nouvelles recettes de cuisine.',
+  title: 'À table ! 🍲 Ton grimoire de cuisine',
+  description: 'Gère tes recettes et planifie tes festins sans te prendre le chou.',
 };
 
 export default function RootLayout({
@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`} suppressHydrationWarning>
+    <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`}>
       <body className="font-sans min-h-screen bg-background text-foreground flex flex-col">
         <FirebaseClientProvider>
           <SettingsProvider>

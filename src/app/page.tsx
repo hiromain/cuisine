@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRecipes } from '@/context/recipe-context';
 import { RecipeCard } from '@/components/recipe-card';
@@ -12,7 +12,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ShoppingCart, Search, Filter, ChefHat } from 'lucide-react';
+import { ShoppingCart, Search, Filter, ChefHat, UtensilsCrossed } from 'lucide-react';
+
+const MESSAGES = [
+  "Ton coin Miam-Miam",
+  "Le temple du Grignotage",
+  "L'antre de la Gourmandise",
+  "Ton grimoire à Festins",
+  "Le QG des Papilles",
+  "Ta cuisine, tes Règles",
+  "Le paradis des Gloutons",
+  "Tes recettes secrètes (chut !)",
+  "L'atelier des Saveurs",
+  "Ton futur Chef-d'œuvre",
+  "Le labo des Délices",
+  "Tes pépites Culinaires",
+  "La fabrique à Souvenirs",
+  "Ton carnet Gourmand",
+  "L'escale des Saveurs",
+  "Tes envies du Moment",
+  "La caverne d'Ali Baba (version Food)",
+  "Ton répertoire à Régalades",
+  "Le repaire des Fins Gourmets",
+  "Tes créations qui Déchirent",
+  "Le jardin des Délices",
+  "Ton menu de Ministre",
+  "L'académie du Goût",
+  "Tes plats Signature",
+  "Le coin des Bons Vivants",
+  "Ton inspiration Quotidienne",
+  "La cuisine du Bonheur",
+  "Tes petits Plats Maison",
+  "Le palais de la Gastronomie",
+  "Ton escapade Gustative",
+  "La bibliothèque du Miam",
+  "Tes recettes de Légende",
+  "Le sanctuaire du Goût",
+  "Ton festival de Saveurs",
+  "La machine à Régaler",
+  "Tes idées les plus Folles",
+  "Le bastion de la Cuisine",
+  "Ton refuge Gourmand",
+  "L'arène des Fourneaux",
+  "Tes pépites de Chef",
+  "La source de l'Inspiration",
+  "Ton carnet de Voyage Culinaire",
+  "Le théâtre des Papilles",
+  "Tes secrets de Grand-Mère",
+  "La mine d'Or du Goût",
+  "Ton cocktail de Recettes",
+  "L'orchestre des Marmites",
+  "Tes délices de Saison",
+  "La magie des Épices",
+  "Ton univers Croquant"
+];
 
 export default function HomePage() {
   const { recipes } = useRecipes();
@@ -21,6 +74,13 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
+  const [randomMessage, setRandomMessage] = useState("Ton coin Miam-Miam");
+
+  // On choisit un message aléatoire au chargement
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * MESSAGES.length);
+    setRandomMessage(MESSAGES[randomIndex]);
+  }, []);
 
   // Advanced filters state
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
@@ -80,13 +140,18 @@ export default function HomePage() {
       <section className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="inline-flex items-center justify-center p-2 mb-4 rounded-full bg-primary/10 text-primary">
           <ChefHat className="h-5 w-5 mr-2" />
-          <span className="text-sm font-bold uppercase tracking-wider">Cuisinez avec passion</span>
+          <span className="text-sm font-bold uppercase tracking-wider">On cuisine quoi aujourd'hui ?</span>
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl mb-6">
-          Votre univers <span className="text-primary">Culinaire</span>
+          {randomMessage.split(' ').map((word, i, arr) => (
+            <span key={i}>
+              {i === arr.length - 1 ? <span className="text-primary">{word}</span> : word}
+              {i < arr.length - 1 ? ' ' : ''}
+            </span>
+          ))}
         </h1>
         <p className="max-w-2xl mx-auto text-xl text-muted-foreground leading-relaxed">
-          Gérez vos recettes préférées, planifiez vos repas et générez vos listes de courses en un clin d'œil.
+          Gère tes pépites culinaires, planifie tes festins et génère ta liste de courses sans te prendre le chou.
         </p>
       </section>
 
@@ -97,7 +162,7 @@ export default function HomePage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Rechercher une recette ou un ingrédient..."
+                placeholder="Cherche un plat ou un ingrédient mystère..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="pl-12 w-full !h-14 bg-background/50 border-none rounded-xl text-lg focus-visible:ring-primary"
@@ -111,7 +176,7 @@ export default function HomePage() {
                   <SelectContent>
                     {categories.map(cat => (
                       <SelectItem key={cat} value={cat} className="capitalize">
-                        {cat === 'all' ? 'Tout voir' : cat}
+                        {cat === 'all' ? 'Toutes tes envies' : cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -119,7 +184,7 @@ export default function HomePage() {
               <CollapsibleTrigger asChild>
                 <Button variant="secondary" className="!h-14 rounded-xl px-6">
                   <Filter className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Filtres</span>
+                  <span className="hidden sm:inline">Plus de filtres</span>
                 </Button>
               </CollapsibleTrigger>
             </div>
@@ -129,7 +194,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-border/50">
               <div className="space-y-4">
                 <div className="flex justify-between">
-                  <Label className="font-bold">Temps total maximum</Label>
+                  <Label className="font-bold">Pas plus de...</Label>
                   <span className="text-primary font-bold">{maxTotalTime} min</span>
                 </div>
                 <Slider
@@ -142,7 +207,7 @@ export default function HomePage() {
                 />
               </div>
               <div className="space-y-4">
-                <Label htmlFor="servings" className="font-bold">Portions (minimum)</Label>
+                <Label htmlFor="servings" className="font-bold">Pour combien de gourmands ?</Label>
                 <Input
                   id="servings"
                   type="number"
@@ -155,20 +220,20 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
                <div className="space-y-2">
-                <Label className="font-bold">Inclure ces ingrédients</Label>
+                <Label className="font-bold">Je veux du...</Label>
                 <Input
                   type="text"
-                  placeholder="Poulet, basilic..."
+                  placeholder="Poulet, chocolat, amour..."
                   value={includeIngredients}
                   onChange={e => setIncludeIngredients(e.target.value)}
                   className="bg-background/50 border-none h-11"
                 />
               </div>
                <div className="space-y-2">
-                <Label className="font-bold">Exclure ces ingrédients</Label>
+                <Label className="font-bold">Surtout pas de...</Label>
                 <Input
                   type="text"
-                  placeholder="Coriandre, arachides..."
+                  placeholder="Céleri, choux de Bruxelles..."
                   value={excludeIngredients}
                   onChange={e => setExcludeIngredients(e.target.value)}
                   className="bg-background/50 border-none h-11"
@@ -183,7 +248,7 @@ export default function HomePage() {
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
           <Button onClick={generateShoppingList} size="lg" className="h-14 px-8 rounded-full shadow-2xl animate-in fade-in zoom-in slide-in-from-bottom-4 duration-300 font-bold text-lg hover:scale-105 transition-transform">
             <ShoppingCart className="mr-3 h-6 w-6" />
-            Liste de courses ({selectedRecipes.size})
+            Hop, ma liste ! ({selectedRecipes.size})
           </Button>
         </div>
       )}
@@ -207,14 +272,14 @@ export default function HomePage() {
       ) : (
         <div className="text-center py-24 bg-card/50 rounded-3xl border border-dashed border-muted-foreground/30">
           <div className="inline-flex items-center justify-center p-6 bg-muted rounded-full mb-6">
-             <Search className="h-12 w-12 text-muted-foreground/50" />
+             <UtensilsCrossed className="h-12 w-12 text-muted-foreground/50" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Aucun résultat trouvé</h2>
+          <h2 className="text-2xl font-bold mb-2">Oups, le frigo est vide !</h2>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            Ajustez vos filtres ou essayez une recherche plus large pour trouver l'inspiration.
+            On n'a rien trouvé avec ces critères. Tente un truc plus fou ou réinitialise tout !
           </p>
-          <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); setIsAdvancedSearchOpen(false); }} className="mt-4 text-primary">
-            Réinitialiser tous les filtres
+          <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); setIsAdvancedSearchOpen(false); }} className="mt-4 text-primary font-bold">
+            On repart de zéro
           </Button>
         </div>
       )}

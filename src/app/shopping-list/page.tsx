@@ -2,18 +2,18 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRecipes } from '@/context/recipe-context';
 import type { Ingredient } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Printer, ShoppingCart } from 'lucide-react';
+import { Printer, ShoppingCart, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 type ShoppingListItem = Ingredient & { checked: boolean };
 
-export default function ShoppingListPage() {
+function ShoppingListContent() {
   const searchParams = useSearchParams();
   const { getRecipeById } = useRecipes();
   const [shoppingList, setShoppingList] = useState<ShoppingListItem[]>([]);
@@ -63,7 +63,7 @@ export default function ShoppingListPage() {
   };
 
   if (!isClient) {
-    return null; // Avoid rendering on server where searchParams are not fully available
+    return null; 
   }
 
   if (shoppingList.length === 0) {
@@ -138,5 +138,17 @@ export default function ShoppingListPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ShoppingListPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <ShoppingListContent />
+    </Suspense>
   );
 }

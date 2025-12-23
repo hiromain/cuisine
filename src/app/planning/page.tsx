@@ -33,13 +33,22 @@ export default function PlanningPage() {
 // ---- Event Components ----
 
 function EventsView() {
-    const { plannedEvents, removeEvent, addEvent, addRecipeToPlan } = usePlanning();
+    const { plannedEvents, removeEvent, addEvent, addRecipeToPlan, isLoading } = usePlanning();
     const { recipes } = useRecipes();
     const router = useRouter();
     const { toast } = useToast();
 
     const handleCreateEvent = (newEvent: PlannedEvent) => {
         router.push(`/planning/events/${newEvent.id}`);
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-serif text-muted-foreground">Chargement de votre planning...</p>
+        </div>
+      );
     }
     
     return (

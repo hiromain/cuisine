@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`}>
+    <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`} suppressHydrationWarning>
       <body className="font-sans min-h-screen bg-background text-foreground flex flex-col">
         <FirebaseClientProvider>
           <SettingsProvider>

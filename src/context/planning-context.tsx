@@ -148,14 +148,6 @@ export const PlanningProvider = ({ children }: { children: ReactNode }) => {
     isLoading
   }), [planningData, addRecipeToPlan, removeRecipeFromPlan, getPlanForDate, addEvent, updateEvent, removeEvent, getEventById, getMealsForEvent, isLoading]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
-        <div className="text-primary font-serif text-2xl">Chargement du planning...</div>
-      </div>
-    );
-  }
-
   return (
     <PlanningContext.Provider value={value}>
       {children}

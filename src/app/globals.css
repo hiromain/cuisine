@@ -5,26 +5,26 @@
 @layer base {
   :root {
     /* Light Mode - Warm & Clean */
-    --background: 40 30% 98%; /* Very light cream */
-    --foreground: 20 10% 15%; /* Deep brownish-grey */
+    --background: 40 30% 98%; /* Crème très léger */
+    --foreground: 20 10% 15%; /* Gris-brun profond */
     
-    --card: 0 0% 100%; /* White cards for clarity */
+    --card: 0 0% 100%; 
     --card-foreground: 20 10% 15%;
     
     --popover: 0 0% 100%;
     --popover-foreground: 20 10% 15%;
     
-    --primary: 25 85% 55%; /* Vibrant burnt orange */
+    --primary: 25 85% 55%; /* Orange Brûlé */
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 40 20% 92%; /* Light beige/grey */
-    --secondary-foreground: 20 10% 15%;
+    --secondary: 70 20% 90%; /* Vert Olive très clair pour le fond */
+    --secondary-foreground: 70 50% 20%; /* Vert Olive foncé */
     
     --muted: 40 20% 92%;
     --muted-foreground: 20 5% 45%;
     
-    --accent: 25 85% 96%; /* Very light orange tint for hover */
-    --accent-foreground: 25 85% 45%;
+    --accent: 70 40% 40%; /* Vert Olive (Accent) */
+    --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -33,69 +33,24 @@
     --input: 40 20% 90%;
     --ring: 25 85% 55%;
 
-    --radius: 0.75rem; /* Slightly more rounded */
-
-    /* Chart colors */
-    --chart-1: 25 85% 55%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --radius: 1rem; /* Plus arrondi pour un aspect "organique" */
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Dark Mode - Warm & Cozy */
-    --background: 24 10% 10%; /* Deep warm black */
+    --background: 24 10% 10%;
     --foreground: 40 20% 94%;
-    
     --card: 24 10% 13%;
     --card-foreground: 40 20% 94%;
-    
-    --popover: 24 10% 13%;
-    --popover-foreground: 40 20% 94%;
-    
     --primary: 25 85% 55%;
-    --primary-foreground: 0 0% 100%;
-    
-    --secondary: 24 10% 18%;
-    --secondary-foreground: 40 20% 94%;
-    
-    --muted: 24 10% 18%;
-    --muted-foreground: 40 10% 60%;
-    
-    --accent: 24 10% 20%;
-    --accent-foreground: 40 20% 94%;
-    
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    
+    --secondary: 70 20% 20%;
+    --secondary-foreground: 70 40% 90%;
+    --accent: 70 40% 45%;
+    --accent-foreground: 0 0% 100%;
     --border: 24 10% 20%;
-    --input: 24 10% 20%;
-    --ring: 25 85% 55%;
-
-    --chart-1: 25 85% 55%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -106,10 +61,16 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-@media print {
-  .no-print {
-    display: none;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
   }
 }
+
+/* Animations personnalisées */
+.animate-stagger > * {
+  --stagger-delay: 100ms;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: calc(var(--stagger-delay) * 1); }
+.animate-stagger > *:nth-child(2) { animation-delay: calc(var(--stagger-delay) * 2); }
+.animate-stagger > *:nth-child(3) { animation-delay: calc(var(--stagger-delay) * 3); }
+.animate-stagger > *:nth-child(4) { animation-delay: calc(var(--stagger-delay) * 4); }

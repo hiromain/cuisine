@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter, Alegreya } from 'next/font/google';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/layout/header';
+import { BackgroundWrapper } from '@/components/layout/background-wrapper';
 import { RecipeProvider } from '@/context/recipe-context';
 import { PlanningProvider } from '@/context/planning-context';
 import { SettingsProvider } from '@/context/settings-context';
@@ -33,9 +34,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`}>
-      <body className="font-sans min-h-screen bg-background text-foreground flex flex-col">
+      <body className="font-sans min-h-screen bg-background text-foreground flex flex-col relative overflow-x-hidden">
         <FirebaseClientProvider>
           <SettingsProvider>
+            <BackgroundWrapper />
             <RecipeProvider>
               <PlanningProvider>
                 <div className="relative flex flex-col flex-1">

@@ -13,11 +13,14 @@ The category must be one of the following: 'Entrée', 'Plat Principal', 'Dessert
 Infer the prep time, cook time, and servings from the user request, or make a reasonable guess if not specified.
 Make sure the recipe is complete and logical.`;
 
+export const DEFAULT_BACKGROUND_IMAGE = "https://images.unsplash.com/photo-1556910103-1c02745aae4d?q=80&w=2070&auto=format&fit=crop";
 
 interface SettingsContextType {
   systemPrompt: string;
   setSystemPrompt: (prompt: string) => void;
   resetSystemPrompt: () => void;
+  backgroundImage: string;
+  setBackgroundImage: (url: string) => void;
   isLoading: boolean;
 }
 
@@ -25,6 +28,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [systemPrompt, setSystemPromptState] = useState<string>(DEFAULT_SYSTEM_PROMPT);
+  const [backgroundImage, setBackgroundImageState] = useState<string>(DEFAULT_BACKGROUND_IMAGE);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -33,26 +37,38 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       if (storedSettings) {
         const parsedSettings = JSON.parse(storedSettings);
         setSystemPromptState(parsedSettings.systemPrompt || DEFAULT_SYSTEM_PROMPT);
+        setBackgroundImageState(parsedSettings.backgroundImage || DEFAULT_BACKGROUND_IMAGE);
       } else {
         setSystemPromptState(DEFAULT_SYSTEM_PROMPT);
+        setBackgroundImageState(DEFAULT_BACKGROUND_IMAGE);
       }
     } catch (error) {
       console.error("Failed to load settings from local storage", error);
       setSystemPromptState(DEFAULT_SYSTEM_PROMPT);
+      setBackgroundImageState(DEFAULT_BACKGROUND_IMAGE);
     } finally {
       setIsLoading(false);
     }
   }, []);
   
-  const setSystemPrompt = useCallback((prompt: string) => {
-    setSystemPromptState(prompt);
+  const saveSettings = (newPrompt: string, newImage: string) => {
      try {
-      const settings = { systemPrompt: prompt };
+      const settings = { systemPrompt: newPrompt, backgroundImage: newImage };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
       console.error("Failed to save settings to local storage", error);
     }
-  }, []);
+  };
+
+  const setSystemPrompt = useCallback((prompt: string) => {
+    setSystemPromptState(prompt);
+    saveSettings(prompt, backgroundImage);
+  }, [backgroundImage]);
+
+  const setBackgroundImage = useCallback((url: string) => {
+    setBackgroundImageState(url);
+    saveSettings(systemPrompt, url);
+  }, [systemPrompt]);
 
   const resetSystemPrompt = useCallback(() => {
     setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
@@ -63,8 +79,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     systemPrompt,
     setSystemPrompt,
     resetSystemPrompt,
+    backgroundImage,
+    setBackgroundImage,
     isLoading,
-  }), [systemPrompt, setSystemPrompt, resetSystemPrompt, isLoading]);
+  }), [systemPrompt, setSystemPrompt, resetSystemPrompt, backgroundImage, setBackgroundImage, isLoading]);
 
   return (
     <SettingsContext.Provider value={value}>

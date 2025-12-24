@@ -211,33 +211,39 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, addRecipe,
       console.log('Résultat planning flow:', result);
 
       if (!result || !result.eventName || !result.meals || result.meals.length === 0) {
-        throw new Error("L'IA n'a pas pu générer de planning valide (pas de repas retournés).");
+        throw new Error("L'IA n'a pas pu générer de planning valide.");
       }
 
+      // 1. Créer l'événement de planning
       const newEvent = addEvent(result.eventName, new Date(), duration);
 
-      // Pour chaque repas, vérifier si c'est une nouvelle recette
+      // 2. Traiter chaque repas
       for (const meal of result.meals) {
         let recipeId = meal.recipeId;
 
-        // Si c'est une nouvelle recette générée par l'IA
+        // Si c'est une nouvelle recette générée
         if (meal.isNew && meal.newRecipeDetails) {
-            // Créer la recette dans le contexte (ce qui l'ajoute à Firestore)
-            const newRecipe = await addRecipe({
+            console.log('Enregistrement de la nouvelle recette:', meal.newRecipeDetails.title);
+            
+            // On s'assure que les données sont complètes
+            const recipeData: Omit<Recipe, 'id'> = {
                 title: meal.newRecipeDetails.title || 'Recette sans titre',
-                description: meal.newRecipeDetails.description || 'Description manquante',
+                description: meal.newRecipeDetails.description || 'Une délicieuse recette générée par l\'IA.',
                 category: meal.newRecipeDetails.category || 'Plat Principal',
                 prepTime: meal.newRecipeDetails.prepTime || 15,
                 cookTime: meal.newRecipeDetails.cookTime || 15,
-                servings: meal.newRecipeDetails.servings || 2,
+                servings: meal.newRecipeDetails.servings || 4,
                 ingredients: meal.newRecipeDetails.ingredients || [],
                 steps: meal.newRecipeDetails.steps || [],
-                imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`, // Image par défaut
-                imageHint: 'food',
-            });
-            recipeId = newRecipe.id; // Récupérer l'ID généré
+                imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`,
+                imageHint: meal.newRecipeDetails.title?.toLowerCase() || 'food',
+            };
+
+            const savedRecipe = await addRecipe(recipeData);
+            recipeId = savedRecipe.id;
         }
 
+        // 3. Ajouter au planning si on a un ID
         if (recipeId) {
             const planDate = addDays(new Date(), meal.day - 1);
             addRecipeToPlan(planDate, meal.meal, recipeId, meal.mealType, newEvent.id);
@@ -246,8 +252,9 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, addRecipe,
 
       toast({
         title: 'Tadam ! ✨',
-        description: `Ton événement "${result.eventName}" est prêt, avec de nouvelles recettes si besoin !`,
+        description: `Ton événement "${result.eventName}" est prêt avec toutes les recettes.`,
       });
+      
       setIsOpen(false);
       setConstraints('');
       setDuration(5);
@@ -288,7 +295,7 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, addRecipe,
             <Label htmlFor="constraints-ai" className="font-bold">Tes envies du moment</Label>
             <Textarea
               id="constraints-ai"
-              placeholder="Dis-moi tout : végétarien, rapide, sans choux de Bruxelles, ambiance italie... (Si tu n'as pas de recettes, je vais en inventer !)"
+              placeholder="Dis-moi tout : végétarien, rapide, sans choux de Bruxelles, ambiance italie... (Je créerai les recettes manquantes !)"
               value={constraints}
               onChange={(e) => setConstraints(e.target.value)}
               rows={4}

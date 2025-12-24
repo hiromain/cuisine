@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40892f566a971fa378b7ed261237e90e71483073bb": {
+      "workers": {
+        "app/planning/page": {
+          "moduleId": 25146,
+          "async": false,
+          "exportedName": "generatePlanning",
+          "filename": "src/ai/flows/generate-planning-flow.ts"
+        }
+      },
+      "layer": {
+        "app/planning/page": "action-browser"
+      },
+      "exportedName": "generatePlanning",
+      "filename": "src/ai/flows/generate-planning-flow.ts"
+    }
+  },
+  "edge": {}
+}

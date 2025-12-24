@@ -1,0 +1,35 @@
+{
+  "node": {
+    "40d4ee465bdd0d862cccc7e2c5a4610bff45746d4b": {
+      "workers": {
+        "app/recipes/new/page": {
+          "moduleId": 91266,
+          "async": false,
+          "exportedName": "importRecipeFromUrl",
+          "filename": "src/ai/flows/recipe-importer-flow.ts"
+        }
+      },
+      "layer": {
+        "app/recipes/new/page": "action-browser"
+      },
+      "exportedName": "importRecipeFromUrl",
+      "filename": "src/ai/flows/recipe-importer-flow.ts"
+    },
+    "4071511988a4c655591544093086352526d579b481": {
+      "workers": {
+        "app/recipes/new/page": {
+          "moduleId": 91266,
+          "async": false,
+          "exportedName": "importRecipeFromPhoto",
+          "filename": "src/ai/flows/recipe-importer-flow.ts"
+        }
+      },
+      "layer": {
+        "app/recipes/new/page": "action-browser"
+      },
+      "exportedName": "importRecipeFromPhoto",
+      "filename": "src/ai/flows/recipe-importer-flow.ts"
+    }
+  },
+  "edge": {}
+}

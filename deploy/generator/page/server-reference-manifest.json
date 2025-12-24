@@ -1,0 +1,20 @@
+{
+  "node": {
+    "40cf7c9bc6657fc9636840307547c8edd338ae677f": {
+      "workers": {
+        "app/generator/page": {
+          "moduleId": 18412,
+          "async": false,
+          "exportedName": "generateRecipe",
+          "filename": "src/ai/flows/generate-recipe-flow.ts"
+        }
+      },
+      "layer": {
+        "app/generator/page": "action-browser"
+      },
+      "exportedName": "generateRecipe",
+      "filename": "src/ai/flows/generate-recipe-flow.ts"
+    }
+  },
+  "edge": {}
+}

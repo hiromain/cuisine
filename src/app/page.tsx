@@ -75,20 +75,19 @@ export default function HomePage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
   const [randomMessage, setRandomMessage] = useState("Ton coin Miam-Miam");
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // On choisit un message aléatoire au chargement
   useEffect(() => {
+    setHasMounted(true);
     const randomIndex = Math.floor(Math.random() * MESSAGES.length);
     setRandomMessage(MESSAGES[randomIndex]);
   }, []);
 
-  // Advanced filters state
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [maxTotalTime, setMaxTotalTime] = useState<number>(240);
   const [servingsFilter, setServingsFilter] = useState<string>('');
   const [includeIngredients, setIncludeIngredients] = useState('');
   const [excludeIngredients, setExcludeIngredients] = useState('');
-
 
   const categories = useMemo(() => ['all', ...Array.from(new Set(recipes.map(r => r.category)))], [recipes]);
 
@@ -135,15 +134,17 @@ export default function HomePage() {
     }
   };
   
+  const displayTitle = hasMounted ? randomMessage : "Ton coin Miam-Miam";
+
   return (
     <div className="py-8">
       <section className="mb-12 text-center animate-in fade-in slide-in-from-top-4 duration-700">
         <div className="inline-flex items-center justify-center p-2 mb-4 rounded-full bg-primary/10 text-primary">
           <ChefHat className="h-5 w-5 mr-2" />
-          <span className="text-sm font-bold uppercase tracking-wider">On cuisine quoi aujourd'hui ?</span>
+          <span className="text-sm font-bold uppercase tracking-wider">On cuisine quoi aujourd&apos;hui ?</span>
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl mb-6">
-          {randomMessage.split(' ').map((word, i, arr) => (
+          {displayTitle.split(' ').map((word, i, arr) => (
             <span key={i}>
               {i === arr.length - 1 ? <span className="text-primary">{word}</span> : word}
               {i < arr.length - 1 ? ' ' : ''}
@@ -276,7 +277,7 @@ export default function HomePage() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Oups, le frigo est vide !</h2>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            On n'a rien trouvé avec ces critères. Tente un truc plus fou ou réinitialise tout !
+            On n&apos;a rien trouvé avec ces critères. Tente un truc plus fou ou réinitialise tout !
           </p>
           <Button variant="link" onClick={() => { setSearchTerm(''); setCategoryFilter('all'); setIsAdvancedSearchOpen(false); }} className="mt-4 text-primary font-bold">
             On repart de zéro

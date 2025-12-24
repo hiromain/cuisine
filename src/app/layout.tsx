@@ -33,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${inter.variable} ${alegreya.variable} antialiased`}>
-      <body className="font-sans min-h-screen bg-background text-foreground flex flex-col relative overflow-x-hidden">
+    <html lang="fr" suppressHydrationWarning>
+      <body className={`${inter.variable} ${alegreya.variable} font-sans antialiased min-h-screen bg-background text-foreground flex flex-col relative overflow-x-hidden`}>
         <FirebaseClientProvider>
           <SettingsProvider>
             <BackgroundWrapper />

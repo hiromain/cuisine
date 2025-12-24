@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { addDays, format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { usePlanning } from '@/context/planning-context';
-import type { PlannedEvent } from '@/lib/types';
+import type { PlannedEvent, Recipe } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { PlusCircle, CalendarDays, PartyPopper, Trash2, Pencil, Sparkles, Loader2, Utensils } from 'lucide-react';
+import { PlusCircle, CalendarDays, PartyPopper, Trash2, Pencil, Sparkles, Loader2, Utensils, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useRecipes } from '@/context/recipe-context';
 import { generatePlanning } from '@/ai/flows/generate-planning-flow';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function PlanningPage() {
   return (
@@ -34,7 +35,7 @@ export default function PlanningPage() {
 
 function EventsView() {
     const { plannedEvents, removeEvent, addEvent, addRecipeToPlan, isLoading } = usePlanning();
-    const { recipes } = useRecipes();
+    const { recipes, addRecipe } = useRecipes();
     const router = useRouter();
     const { toast } = useToast();
 
@@ -69,7 +70,7 @@ function EventsView() {
                         Nouvel événement
                     </Button>
                 </AddEventDialog>
-                 <GeneratePlanningDialog recipes={recipes} addEvent={addEvent} addRecipeToPlan={addRecipeToPlan} toast={toast} />
+                 <GeneratePlanningDialog recipes={recipes} addEvent={addEvent} addRecipeToPlan={addRecipeToPlan} addRecipe={addRecipe} toast={toast} />
             </div>
 
             {plannedEvents.length > 0 ? (
@@ -182,7 +183,7 @@ function AddEventDialog({ children, onEventCreated, existingEvent }: { children:
 }
 
 
-function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: any) {
+function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, addRecipe, toast }: any) {
   const [duration, setDuration] = useState(5);
   const [constraints, setConstraints] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -200,33 +201,59 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
     }
     setIsLoading(true);
     try {
+      console.log('Envoi au planning flow:', { recipeCount: recipes.length, duration, constraints });
       const result = await generatePlanning({
         recipes,
         duration,
         constraints,
       });
 
-      if (!result || !result.eventName || result.meals.length === 0) {
-        throw new Error("L'IA n'a pas pu générer de planning.");
+      console.log('Résultat planning flow:', result);
+
+      if (!result || !result.eventName || !result.meals || result.meals.length === 0) {
+        throw new Error("L'IA n'a pas pu générer de planning valide (pas de repas retournés).");
       }
 
       const newEvent = addEvent(result.eventName, new Date(), duration);
 
-      result.meals.forEach(meal => {
-        const planDate = addDays(new Date(), meal.day - 1);
-        addRecipeToPlan(planDate, meal.meal, meal.recipeId, meal.mealType, newEvent.id);
-      });
+      // Pour chaque repas, vérifier si c'est une nouvelle recette
+      for (const meal of result.meals) {
+        let recipeId = meal.recipeId;
+
+        // Si c'est une nouvelle recette générée par l'IA
+        if (meal.isNew && meal.newRecipeDetails) {
+            // Créer la recette dans le contexte (ce qui l'ajoute à Firestore)
+            const newRecipe = await addRecipe({
+                title: meal.newRecipeDetails.title || 'Recette sans titre',
+                description: meal.newRecipeDetails.description || 'Description manquante',
+                category: meal.newRecipeDetails.category || 'Plat Principal',
+                prepTime: meal.newRecipeDetails.prepTime || 15,
+                cookTime: meal.newRecipeDetails.cookTime || 15,
+                servings: meal.newRecipeDetails.servings || 2,
+                ingredients: meal.newRecipeDetails.ingredients || [],
+                steps: meal.newRecipeDetails.steps || [],
+                imageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`, // Image par défaut
+                imageHint: 'food',
+            });
+            recipeId = newRecipe.id; // Récupérer l'ID généré
+        }
+
+        if (recipeId) {
+            const planDate = addDays(new Date(), meal.day - 1);
+            addRecipeToPlan(planDate, meal.meal, recipeId, meal.mealType, newEvent.id);
+        }
+      }
 
       toast({
         title: 'Tadam ! ✨',
-        description: `Ton événement "${result.eventName}" est prêt.`,
+        description: `Ton événement "${result.eventName}" est prêt, avec de nouvelles recettes si besoin !`,
       });
       setIsOpen(false);
       setConstraints('');
       setDuration(5);
       router.push(`/planning/events/${newEvent.id}`);
     } catch (error: any) {
-      console.error(error);
+      console.error('Erreur UI Planning:', error);
       toast({
         variant: 'destructive',
         title: 'Oups, petit bug technique',
@@ -261,7 +288,7 @@ function GeneratePlanningDialog({ recipes, addEvent, addRecipeToPlan, toast }: a
             <Label htmlFor="constraints-ai" className="font-bold">Tes envies du moment</Label>
             <Textarea
               id="constraints-ai"
-              placeholder="Dis-moi tout : végétarien, rapide, sans choux de Bruxelles, ambiance italie..."
+              placeholder="Dis-moi tout : végétarien, rapide, sans choux de Bruxelles, ambiance italie... (Si tu n'as pas de recettes, je vais en inventer !)"
               value={constraints}
               onChange={(e) => setConstraints(e.target.value)}
               rows={4}

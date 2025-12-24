@@ -1,28 +1,23 @@
 'use server';
 /**
  * @fileOverview Flow to import recipes from a URL or a photo.
- *
- * - importRecipeFromUrl - Imports a recipe from a given URL.
- * - importRecipeFromPhoto - Imports a recipe from a photo.
  */
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const ConfidenceSchema = z.object({
     value: z.any(),
-    confidence: z.number().min(0).max(1).describe('A confidence score from 0.0 to 1.0 on the accuracy of the extracted value.'),
-    justification: z.string().describe('A brief justification for why this value was extracted and what the confidence level is.')
+    confidence: z.number().min(0).max(1),
+    justification: z.string()
 });
 
-// Define input schemas
 const UrlInputSchema = z.object({
-  url: z.string().url().describe('The URL of the recipe page.'),
+  url: z.string().url(),
 });
 export type UrlInput = z.infer<typeof UrlInputSchema>;
 
-
 const PhotoInputSchema = z.object({
-  photoDataUri: z.string().describe("A photo of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  photoDataUri: z.string(),
 });
 export type PhotoInput = z.infer<typeof PhotoInputSchema>;
 
@@ -38,62 +33,43 @@ const ImportedRecipeOutputSchema = z.object({
 }).partial();
 export type ImportedRecipeOutput = z.infer<typeof ImportedRecipeOutputSchema>;
 
-
-// Create prompts
-const urlPrompt = ai.definePrompt({
-  name: 'importRecipeFromUrlPrompt',
-  input: { schema: UrlInputSchema },
-  output: { schema: ImportedRecipeOutputSchema },
-  prompt: `You are an expert recipe scraper. Scrape the recipe from the provided URL.
-For each field, you must provide the extracted value, a confidence score (0.0 to 1.0) and a brief justification.
-- Confidence 1.0: The data is clearly labelled and extracted.
-- Confidence 0.5-0.9: The data is inferred from context or has minor ambiguity.
-- Confidence < 0.5: The data is a wild guess or not found.
-If a value is not found, do not include the field in the output.
-
-URL: {{{url}}}`,
-});
-
-const photoPrompt = ai.definePrompt({
-  name: 'importRecipeFromPhotoPrompt',
-  input: { schema: PhotoInputSchema },
-  output: { schema: ImportedRecipeOutputSchema },
-  prompt: `You are an expert recipe transcriber. Extract the recipe details from the provided image.
-For each field, you must provide the extracted value, a confidence score (0.0 to 1.0) and a brief justification.
-- Confidence 1.0: The data is clearly visible and readable.
-- Confidence 0.5-0.9: The data is inferred, slightly blurry, or has minor ambiguity.
-- Confidence < 0.5: The data is a wild guess, unreadable, or not found.
-If a value is not found, do not include the field in the output.
-
-Photo: {{media url=photoDataUri}}`,
-});
-
-// Create flows
-const importFromUrlFlow = ai.defineFlow(
+export const importFromUrlFlow = ai.defineFlow(
   {
     name: 'importFromUrlFlow',
     inputSchema: UrlInputSchema,
     outputSchema: ImportedRecipeOutputSchema,
   },
   async (input) => {
-    const { output } = await urlPrompt(input);
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash',
+        system: 'Tu es un expert en extraction de données de recettes. Analyse l\'URL fournie et extrais les informations structurées.',
+        prompt: `Extrais la recette de cette URL: ${input.url}`,
+        output: { schema: ImportedRecipeOutputSchema }
+    });
     return output ?? {};
   }
 );
 
-const importFromPhotoFlow = ai.defineFlow(
+export const importFromPhotoFlow = ai.defineFlow(
   {
     name: 'importFromPhotoFlow',
     inputSchema: PhotoInputSchema,
     outputSchema: ImportedRecipeOutputSchema,
   },
   async (input) => {
-    const { output } = await photoPrompt(input);
+    const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash',
+        system: 'Tu es un expert en transcription de recettes à partir d\'images. Analyse l\'image fournie.',
+        prompt: [
+            { text: 'Extrais les détails de la recette de cette image.' },
+            { media: { url: input.photoDataUri } }
+        ],
+        output: { schema: ImportedRecipeOutputSchema }
+    });
     return output ?? {};
   }
 );
 
-// Exported functions to be called from the client
 export async function importRecipeFromUrl(input: UrlInput): Promise<ImportedRecipeOutput> {
   return await importFromUrlFlow(input);
 }

@@ -11,13 +11,12 @@ import {RecipeSchema} from '@/lib/ai-schema';
 // Define input schemas
 const GenerateRecipeInputSchema = z.object({
   userInput: z.string().describe('The user\'s request for the recipe, e.g., "a simple chicken pasta" or "a vegan chocolate cake".'),
-  systemPrompt: z.string().describe('The system prompt to guide the AI model.'),
+  systemPrompt: z.string().optional().describe('The system prompt to guide the AI model.'),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
 
 // Define the output schema by picking fields from the main Recipe schema
-// We omit id, imageUrl, and imageHint as they will be generated separately/later.
 const GeneratedRecipeOutputSchema = RecipeSchema.pick({
   title: true,
   description: true,
@@ -39,19 +38,19 @@ const generateRecipeFlow = ai.defineFlow(
     outputSchema: GeneratedRecipeOutputSchema,
   },
   async (input) => {
-    
-    const prompt = ai.definePrompt({
-        name: 'generateRecipePrompt',
-        input: { schema: GenerateRecipeInputSchema },
+    try {
+      const { output } = await ai.generate({
+        model: 'googleai/gemini-2.0-flash',
+        system: input.systemPrompt || 'Tu es un chef cuisinier créatif. Ta mission est de générer des recettes délicieuses et faciles à suivre.',
+        prompt: `Basé sur la demande de l'utilisateur, génère une nouvelle recette : "${input.userInput}"`,
         output: { schema: GeneratedRecipeOutputSchema },
-        system: input.systemPrompt,
-        prompt: `Based on the user's request, generate a new recipe.
-        
-        User Request: {{{userInput}}}`,
       });
 
-    const { output } = await prompt(input);
-    return output ?? {};
+      return output ?? {};
+    } catch (error) {
+      console.error('Erreur génération recette:', error);
+      throw error;
+    }
   }
 );
 

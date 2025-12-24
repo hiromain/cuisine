@@ -17,8 +17,16 @@ const GeneratePlanningInputSchema = z.object({
 });
 export type GeneratePlanningInput = z.infer<typeof GeneratePlanningInputSchema>;
 
+// Schema pour une recette complète générée à la volée (sans ID)
+const GeneratedRecipeDetailSchema = RecipeSchema.omit({ id: true }).partial();
+
 const PlannedMealSchema = z.object({
-    recipeId: z.string().describe("The ID of the chosen recipe."),
+    // Soit on utilise un ID existant
+    recipeId: z.string().optional().describe("The ID of the chosen recipe from the provided list. Required if isNew is false."),
+    // Soit c'est une nouvelle recette
+    isNew: z.boolean().describe("Set to true if this is a newly generated recipe not in the provided list."),
+    newRecipeDetails: GeneratedRecipeDetailSchema.optional().describe("Complete details of the new recipe. Required if isNew is true."),
+    
     day: z.number().int().min(1).describe("The day number in the plan (e.g., 1 for Day 1)."),
     meal: z.enum(['Midi', 'Soir']).describe("The meal slot, either 'Midi' (Lunch) or 'Soir' (Dinner)."),
     mealType: z.enum(['Entrée', 'Plat Principal', 'Dessert']).describe("The type of meal."),
@@ -43,15 +51,18 @@ const generatePlanningFlow = ai.defineFlow(
     try {
       const { output } = await ai.generate({
         model: 'googleai/gemini-2.0-flash',
-        system: `You are an expert meal planner. Your task is to create a balanced and varied meal plan for a user based on their constraints and a list of available recipes.
+        system: `You are an expert meal planner. Your task is to create a balanced and varied meal plan for a user based on their constraints.
 
 - You will plan for **${duration}** days.
 - For each day, you must plan a "Plat Principal" for "Midi" (Lunch) and "Soir" (Dinner).
-- You can optionally add an "Entrée" (Starter) or a "Dessert" for some meals to create variety, but a "Plat Principal" is mandatory for each lunch and dinner.
-- You must ONLY use recipes from the provided list. Use the exact 'id' of the recipe.
+- You can optionally add an "Entrée" (Starter) or a "Dessert" for some meals to create variety.
+- **PRIORITY:** Try to use recipes from the provided "Available Recipes" list first if they match the constraints.
+- **FALLBACK:** If no suitable recipe exists in the list for a specific slot (or to add variety), YOU MUST GENERATE A NEW RECIPE.
+    - If you generate a new recipe, set 'isNew' to true and fill 'newRecipeDetails' with ALL recipe fields (title, ingredients, steps, etc.).
+    - If you use an existing recipe, set 'isNew' to false and provide the 'recipeId'.
 - Adhere to the user's constraints: "${constraints}".
-- Do not use the same main dish twice in the same day. Try to vary the main dishes throughout the week.
-- Generate a suitable name for the event based on the user's constraints and the duration.`,
+- Do not use the same main dish twice in the same day.
+- Generate a suitable name for the event.`,
         prompt: `Here is the list of available recipes in JSON format:
 ${availableRecipesJson}
 

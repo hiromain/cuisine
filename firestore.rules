@@ -1,90 +1,20 @@
-/**
- * Core Philosophy: This ruleset establishes a public, read-only data model.
- * The application's data, including recipes, ingredients, and categories, is
- * intended to be publicly accessible for reading by any client, regardless of
- * authentication state. All write operations (create, update, delete) are
- * disabled from the client-side to protect data integrity. Data management
- * should be handled exclusively through the Firebase Console or a trusted
- * server environment using the Admin SDK.
- *
- * Data Structure: The data is organized into three flat, top-level collections:
- * /recipes, /ingredients, and /categories. This simple structure facilitates
- * easy and performant querying for public data. There is no user-specific data
- * or nesting in this model.
- *
- * Key Security Decisions:
- * - Public Read Access: All data is publicly readable (`get`, `list`) to support
- *   the core functionality of browsing recipes without requiring user accounts.
- * - Client Writes Disabled: All write operations are explicitly denied (`if false`).
- *   This is the most critical security measure, preventing any unauthorized
- *   modification or deletion of the shared recipe data.
- * - No User Model: The rules are designed based on the requirement that there is
- *   no user authentication or data ownership concept in the app.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for readability and reusability.
-    // Although not used in this public read-only model, they are
-    // included as best practice for future development.
-
-    /**
-     * Checks if a user is authenticated.
-     */
-    function isSignedIn() {
-      return auth != null;
-    }
-
-    /**
-     * @description Allows public, read-only access to all recipes. Disallows all
-     *   client-side writes to ensure data integrity.
-     * @path /recipes/{recipeId}
-     * @allow (get) Any user, signed-in or not, can read a recipe document.
-     * @deny (create) No user, even if authenticated, can create a new recipe.
-     * @principle Protects data integrity by making the collection read-only from
-     *   the client. Data should be managed via the Firebase Console or a trusted
-     *   backend service.
-     */
     match /recipes/{recipeId} {
-      allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow read: if true;
+      allow write: if true; // Allow public write access for demo/dev purposes
+    }
+    
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if true; // Allow public write access for demo/dev purposes
     }
 
-    /**
-     * @description Allows public, read-only access to all ingredients. Disallows
-     *   all client-side writes.
-     * @path /ingredients/{ingredientId}
-     * @allow (get) Any user, signed-in or not, can read an ingredient document.
-     * @deny (update) No user can update an existing ingredient from the client.
-     * @principle Protects data integrity by making the collection read-only from
-     *   the client. Data should be managed via the Firebase Console or a trusted
-     *   backend service.
-     */
-    match /ingredients/{ingredientId} {
-      allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
-    }
-
-    /**
-     * @description Allows public, read-only access to all categories. Disallows
-     *   all client-side writes.
-     * @path /categories/{categoryId}
-     * @allow (list) Any client can list all categories in the collection.
-     * @deny (delete) No user can delete a category document from the client.
-     * @principle Protects data integrity by making the collection read-only from
-     *   the client. Data should be managed via the Firebase Console or a trusted
-     *   backend service.
-     */
-    match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+    match /events/{eventId}/meals/{mealId} {
+      allow read: if true;
+      allow write: if true;
     }
   }
 }

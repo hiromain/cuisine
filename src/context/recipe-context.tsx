@@ -19,6 +19,10 @@ interface RecipeContextType {
   setGeneratedRecipe: (recipe: Partial<Recipe> | null) => void;
   generatedMenu: Partial<Recipe>[] | null;
   setGeneratedMenu: (menu: Partial<Recipe>[] | null) => void;
+  favoriteIds: string[];
+  toggleFavorite: (id: string) => void;
+  isFavorite: (id: string) => boolean;
+  favoriteRecipes: Recipe[];
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -32,8 +36,30 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [generatedRecipe, setGeneratedRecipe] = useState<Partial<Recipe> | null>(null);
   const [generatedMenu, setGeneratedMenu] = useState<Partial<Recipe>[] | null>(null);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
-   useEffect(() => {
+  // Charger les favoris depuis localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('favorite_recipes');
+      if (stored) {
+        setFavoriteIds(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load favorites', error);
+    }
+  }, []);
+
+  // Sauvegarder les favoris
+  useEffect(() => {
+    try {
+      localStorage.setItem('favorite_recipes', JSON.stringify(favoriteIds));
+    } catch (error) {
+      console.error('Failed to save favorites', error);
+    }
+  }, [favoriteIds]);
+
+  useEffect(() => {
     if (recipesData) {
       setRecipes(recipesData);
     }
@@ -53,24 +79,37 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
     const newRecipe: Recipe = {
       ...recipe,
       id: newRecipeId,
-      ingredients: recipe.ingredients.map(ing => ({...ing, id: `ing-${Date.now()}-${Math.random()}`}))
+      ingredients: recipe.ingredients.map(ing => ({ ...ing, id: `ing-${Date.now()}-${Math.random()}` }))
     };
-    
+
     if (!recipesCollection) return newRecipe; // Should not happen
     addDocumentNonBlocking(recipesCollection, newRecipe);
-    
+
     return newRecipe;
   };
 
   const updateRecipe = (updatedRecipe: Recipe) => {
-     const recipeRef = doc(firestore, 'recipes', updatedRecipe.id);
-     setDocumentNonBlocking(recipeRef, updatedRecipe, { merge: true });
+    const recipeRef = doc(firestore, 'recipes', updatedRecipe.id);
+    setDocumentNonBlocking(recipeRef, updatedRecipe, { merge: true });
   };
 
   const deleteRecipe = (id: string) => {
     const recipeRef = doc(firestore, 'recipes', id);
     deleteDocumentNonBlocking(recipeRef);
   };
+
+  const toggleFavorite = (id: string) => {
+    setFavoriteIds(prev =>
+      prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
+    );
+  };
+
+  const isFavorite = (id: string) => favoriteIds.includes(id);
+
+  const favoriteRecipes = useMemo(() =>
+    recipes.filter(r => favoriteIds.includes(r.id)),
+    [recipes, favoriteIds]
+  );
 
   const value = useMemo(() => ({
     recipes,
@@ -83,7 +122,11 @@ export const RecipeProvider = ({ children }: { children: ReactNode }) => {
     setGeneratedRecipe,
     generatedMenu,
     setGeneratedMenu,
-  }), [recipes, isLoading, generatedRecipe, generatedMenu]);
+    favoriteIds,
+    toggleFavorite,
+    isFavorite,
+    favoriteRecipes,
+  }), [recipes, isLoading, generatedRecipe, generatedMenu, favoriteIds, favoriteRecipes]);
 
   return (
     <RecipeContext.Provider value={value}>

@@ -14,8 +14,8 @@ import { cn } from '@/lib/utils';
 const navigation = [
     { name: 'Accueil', href: '/', icon: Home },
     { name: 'Recettes', href: '/recettes', icon: ChefHat },
+    { name: 'Ma Semaine', href: '/planning/semaine', icon: Calendar },
     { name: 'Générateur', href: '/generateur', icon: Sparkles },
-    { name: 'Planning', href: '/planning', icon: Calendar },
     { name: 'Courses', href: '/liste-courses', icon: ShoppingCart },
 ];
 
